@@ -14,11 +14,13 @@ pub struct Renderer {
 }
 
 impl Renderer {
+    /// Create a new renderer.
     pub fn new(config: &Config) -> Self {
         let inner = unsafe { ulCreateRenderer(config.into()) };
         Self { inner }
     }
 
+    /// Create a View with certain size (in pixels).
     pub fn create_view(&mut self, width: u32, height: u32, config: &ViewConfig) -> View {
         let view = unsafe { ulCreateView(self.inner, width, height, config.into(), null_mut()) };
         let mut view = View::from(view);
@@ -26,12 +28,14 @@ impl Renderer {
         view
     }
 
+    /// Render all active `Views`.
     pub fn render(&mut self) {
         unsafe {
             ulRender(self.inner);
         }
     }
 
+    /// Update timers and dispatch internal callbacks (JavaScript and network).
     pub fn update(&mut self) {
         unsafe {
             ulUpdate(self.inner);
@@ -59,6 +63,7 @@ pub struct View {
 }
 
 impl View {
+    /// Set callback for when the page finishes loading a URL into a frame.
     pub fn set_finish_loading_callback(&mut self, callback: ULFinishLoadingCallback) {
         unsafe {
             ulViewSetFinishLoadingCallback(
@@ -69,6 +74,7 @@ impl View {
         }
     }
 
+    /// Load a URL into main frame.
     pub fn load_url(&mut self, string: String) {
         unsafe {
             let url_string = CString::new(string).unwrap();
@@ -78,10 +84,12 @@ impl View {
         }
     }
 
+    /// Returns whether the main frame is loaded.
     pub fn is_ready(&self) -> bool {
         *self.is_ready
     }
 
+    /// Get the surface of the `View` as a `RgbaImage`.
     pub fn get_image(&self) -> RgbaImage {
         unsafe {
             let surface = ulViewGetSurface(self.inner);

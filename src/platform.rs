@@ -6,7 +6,7 @@ use crate::sys::{
 };
 use std::ffi::CString;
 
-pub extern "C" fn default_logger(log_level: ULLogLevel, msg: ULString) {
+extern "C" fn default_logger(log_level: ULLogLevel, msg: ULString) {
     let msg_length = unsafe { ulStringGetLength(msg) };
     let msg_data = unsafe { ulStringGetData(msg) };
     let msg_slice = unsafe { std::slice::from_raw_parts(msg_data as *const u8, msg_length) };
@@ -21,6 +21,11 @@ pub extern "C" fn default_logger(log_level: ULLogLevel, msg: ULString) {
     }
 }
 
+/// Does a couple of things needed to initialize ultralight.
+///
+/// Initializes the platform font loader and sets it as the current FontLoader.
+/// Initializes the platform file system (needed for loading file:/// URLs) and sets the path to `filesys_path`
+/// Initializes a default logger.
 pub fn init(filesys_path: String) {
     unsafe {
         ulEnablePlatformFontLoader();

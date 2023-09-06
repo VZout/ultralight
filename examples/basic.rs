@@ -1,5 +1,7 @@
 use ultralight::{Config, Renderer, ViewConfig};
 
+/// Extremely simple example loading and rendering page.html
+/// Then writing it to disc as a PNG file.
 pub fn main() {
     ultralight::init("./examples/assets/".to_owned());
 
@@ -18,6 +20,5 @@ pub fn main() {
 
     renderer.render();
 
-    let output = view.get_image();
-    output.save("test.png").unwrap();
+    view.get_image().save("test.png").unwrap();
 }

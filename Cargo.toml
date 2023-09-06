@@ -2,9 +2,10 @@
 name = "ultralight"
 version = "0.1.1"
 edition = "2021"
-description = "Rust bindings for Ultralight. Next-Generation HTML Renderer"
+description = "Rust bindings for Ultralight: Next-Generation HTML Renderer"
 homepage = "https://ultralig.ht/"
 license-file = "LICENSE"
+categories = ["gui", "web-programming", "visualization", "rendering", "graphics"]
 
 [dependencies]
 image = "0.24.0"
