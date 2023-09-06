@@ -2,6 +2,8 @@
 name = "ultralight"
 version = "0.1.0"
 edition = "2021"
+description = "Rust bindings for Ultralight. Next-Generation HTML Renderer"
+homepage = "https://ultralig.ht/"
 
 [dependencies]
 image = "*"
