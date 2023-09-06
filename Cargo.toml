@@ -1,0 +1,10 @@
+[package]
+name = "ultralight"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+image = "*"
+
+[build-dependencies]
+bindgen = "0.68.0"
