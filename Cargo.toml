@@ -7,7 +7,7 @@ homepage = "https://ultralig.ht/"
 license-file = "LICENSE"
 
 [dependencies]
-image = "*"
+image = "0.24.0"
 
 [build-dependencies]
 bindgen = "0.68.0"
