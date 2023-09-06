@@ -1,10 +1,10 @@
-<h1 align="center">Ultralight</h1>
+<h1 align="center">Ultralight <img src="http://upload.vzout.com/ferris.svg" width="44px"></h1>
 
 ---
 
 <p align="center">
   <strong>
-  Opinionated <img src="http://upload.vzout.com/ferris.svg" width="22px"> Rust bindings for <a href="https://ultralig.ht/">Ultralight</a>
+  Opinionated <a href="https://www.rust-lang.org/">Rust</a> bindings for <a href="https://ultralig.ht/">Ultralight</a>
   </strong>
 </p>
 
