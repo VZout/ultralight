@@ -18,6 +18,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build
       run: cargo build --verbose --examples
-    - name: Examples
-      run: cargo run -r --example basic
-           cargo run -r --example javascript
+    - name: Run examples
+      run: |
+        cargo run -r --example basic
+        cargo run -r --example javascript
