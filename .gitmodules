@@ -1,0 +1,3 @@
+[submodule "ultralight-api"]
+	path = ultralight-api
+	url = https://github.com/VZout/ultralight.git

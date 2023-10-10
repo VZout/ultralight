@@ -53,7 +53,7 @@ fn main() {
         {
             use std::env;
 
-            let api_path = format!("{}/api/", env!("CARGO_MANIFEST_DIR"));
+            let api_path = format!("{}/ultralight-api/", env!("CARGO_MANIFEST_DIR"));
             let out_path = format!("{}/src/generated_bindings.rs", env!("CARGO_MANIFEST_DIR"));
 
             let bindings = bindgen::Builder::default()
