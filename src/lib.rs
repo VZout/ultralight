@@ -1,9 +1,12 @@
+pub mod javascript;
 pub mod platform;
 pub mod renderer;
 pub mod sys;
 
+pub use javascript::*;
 pub use platform::*;
 pub use renderer::*;
+use sys::{ulConfigSetAnimationTimerDelay, ulViewConfigSetIsTransparent};
 
 use crate::sys::{
     ulConfigSetResourcePathPrefix, ulCreateConfig, ulCreateString, ulCreateViewConfig,
@@ -22,6 +25,7 @@ impl Config {
         unsafe {
             let path = ulCreateString(path.as_ptr());
             ulConfigSetResourcePathPrefix(self.inner, path);
+            ulConfigSetAnimationTimerDelay(self.inner, 0.0);
             ulDestroyString(path);
         }
     }
@@ -59,6 +63,7 @@ impl Default for ViewConfig {
         unsafe {
             ulViewConfigSetInitialDeviceScale(inner, 1.0);
             ulViewConfigSetIsAccelerated(inner, false);
+            ulViewConfigSetIsTransparent(inner, true);
         }
 
         Self { inner }

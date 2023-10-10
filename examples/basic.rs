@@ -9,7 +9,7 @@ pub fn main() {
     config.set_resource_path_prefix("../resources/".to_owned());
 
     let mut renderer = Renderer::new(&config);
-    let mut view = renderer.create_view(800, 800, &ViewConfig::default());
+    let mut view: ultralight::View = renderer.create_view(800, 800, &ViewConfig::default());
 
     view.load_url("file:///page.html".to_owned());
 

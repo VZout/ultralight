@@ -1,5 +1,4 @@
-use std::env;
-use std::path::PathBuf;
+// TODO: Can potentially remove `AppCore` linking.
 
 fn main() {
     println!(
@@ -12,21 +11,46 @@ fn main() {
     println!("cargo:rustc-link-lib=WebCore");
     println!("cargo:rustc-link-lib=AppCore");
 
-    let api_path = format!("{}/api/", env!("CARGO_MANIFEST_DIR"));
+    let profile: String = std::env::var("PROFILE").unwrap();
+    let out_dir: String = std::env::var("OUT_DIR").unwrap();
+    let target = format!("{}/../../../../{}/", out_dir, profile);
+    let target = std::path::Path::new(&target);
+    let target = target.canonicalize().unwrap();
 
-    let bindings = bindgen::Builder::default()
-        .header(format!("{}{}", api_path, "AppCore/CAPI.h"))
-        .clang_arg(format!("-I{}", api_path))
-        .clang_arg("-Duintptr_t=unsigned __int64")
-        .clang_arg("-Dintptr_t=__int64")
-        .derive_default(true)
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-        .generate()
-        .expect("Unable to generate bindings");
+    fs_extra::copy_items(
+        &[
+            format!("{}/bin/Ultralight.dll", env!("CARGO_MANIFEST_DIR")),
+            format!("{}/bin/UltralightCore.dll", env!("CARGO_MANIFEST_DIR")),
+            format!("{}/bin/WebCore.dll", env!("CARGO_MANIFEST_DIR")),
+            format!("{}/bin/AppCore.dll", env!("CARGO_MANIFEST_DIR")),
+        ],
+        target,
+        &fs_extra::dir::CopyOptions::new().skip_exist(true),
+    )
+    .expect("Failed to copy ultralight dlls");
 
-    // Write the bindings to the $OUT_DIR/bindings.rs file.
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    bindings
-        .write_to_file(out_path.join("app_core.rs"))
-        .expect("Couldn't write bindings!");
+    #[cfg(feature = "generate_bindings")]
+    {
+        use std::env;
+
+        let api_path = format!("{}/api/", env!("CARGO_MANIFEST_DIR"));
+        let out_path = format!("{}/src/generated_bindings.rs", env!("CARGO_MANIFEST_DIR"));
+
+        let bindings = bindgen::Builder::default()
+            .header(format!("{}{}", api_path, "AppCore/CAPI.h"))
+            .clang_arg(format!("-I{}", api_path))
+            .derive_default(true)
+            .clang_arg("-Duintptr_t=unsigned __int64")
+            .clang_arg("-Dintptr_t=__int64")
+            .layout_tests(false)
+            .rustified_enum("ULLogLevel")
+            .rustified_enum("ULMessageLevel")
+            .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+            .generate()
+            .expect("Unable to generate bindings");
+
+        bindings
+            .write_to_file(out_path)
+            .expect("Couldn't write bindings!");
+    }
 }
