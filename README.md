@@ -4,7 +4,7 @@
   <a href="#"><img alt="GitHub Workflow Status (with event)" src="https://img.shields.io/github/actions/workflow/status/VZout/ultralight/rust.yml?style=flat-square&logo=github&logoColor=white"></a>
   <a href="https://crates.io/crates/ultralight"><img alt="Crates.io" src="https://img.shields.io/crates/v/ultralight?style=flat-square&logo=rust"></a>
   <a href="https://docs.rs/crate/ultralight/latest"><img alt="docs.rs" src="https://img.shields.io/docsrs/ultralight?style=flat-square&logo=docs.rs"></a>
-</p>
+</h1>
 
 ---
 
