@@ -12,18 +12,21 @@ fn main() {
     println!("cargo:rustc-link-lib=AppCore");
 
     // Download WebCore.dll as its to large to upload to crates.io
-    let webcore_url = "https://github.com/VZout/ultralight/releases/download/v0.1.3/WebCore.dll";
     let webcore_out: String = format!("{}/WebCore.dll", std::env::var("OUT_DIR").unwrap());
-    std::process::Command::new("powershell")
-        .args([
-            "Invoke-WebRequest",
-            "-URI",
-            webcore_url,
-            "-OutFile",
-            &webcore_out,
-        ])
-        .output()
-        .expect("failed to download WebCore.dll");
+    if !std::path::Path::new(&webcore_out).exists() {
+        let webcore_url =
+            "https://github.com/VZout/ultralight/releases/download/v0.1.3/WebCore.dll";
+        std::process::Command::new("powershell")
+            .args([
+                "Invoke-WebRequest",
+                "-URI",
+                webcore_url,
+                "-OutFile",
+                &webcore_out,
+            ])
+            .output()
+            .expect("failed to download WebCore.dll");
+    }
 
     let profile: String = std::env::var("PROFILE").unwrap();
     let out_dir: String = std::env::var("OUT_DIR").unwrap();
@@ -31,6 +34,7 @@ fn main() {
     let target = std::path::Path::new(&target);
     let target = target.canonicalize().unwrap();
 
+    // Copy dll's to executable directory
     fs_extra::copy_items(
         &[
             format!("{}/bin/Ultralight.dll", env!("CARGO_MANIFEST_DIR")),
