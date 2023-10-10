@@ -4,7 +4,7 @@ fn main() {
     #[cfg(windows)]
     {
         println!(
-            "cargo:rustc-link-search={}/libs/",
+            "cargo:rustc-link-search={}/ultralight-lib/",
             env!("CARGO_MANIFEST_DIR")
         );
 
@@ -39,10 +39,16 @@ fn main() {
         // Copy dll's to executable directory
         fs_extra::copy_items(
             &[
-                format!("{}/bin/Ultralight.dll", env!("CARGO_MANIFEST_DIR")),
-                format!("{}/bin/UltralightCore.dll", env!("CARGO_MANIFEST_DIR")),
+                format!(
+                    "{}/ultralight-bin/Ultralight.dll",
+                    env!("CARGO_MANIFEST_DIR")
+                ),
+                format!(
+                    "{}/ultralight-bin/UltralightCore.dll",
+                    env!("CARGO_MANIFEST_DIR")
+                ),
                 webcore_out,
-                format!("{}/bin/AppCore.dll", env!("CARGO_MANIFEST_DIR")),
+                format!("{}/ultralight-bin/AppCore.dll", env!("CARGO_MANIFEST_DIR")),
             ],
             target.clone(),
             &fs_extra::dir::CopyOptions::new().skip_exist(true),
