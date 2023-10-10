@@ -3,7 +3,7 @@ use ultralight::{Config, Renderer, ViewConfig};
 /// Extremely simple example loading and rendering page.html
 /// Then writing it to disc as a PNG file.
 pub fn main() {
-    ultralight::init("./examples/assets/".to_owned());
+    ultralight::init("./examples/assets/".to_owned(), None);
 
     let mut config = Config::default();
     config.set_resource_path_prefix("../resources/".to_owned());
