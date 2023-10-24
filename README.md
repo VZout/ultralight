@@ -21,6 +21,7 @@
 
 The free version of Ultralight does not allow static linking. This crate however tries to automatically copy the DLL's for you. in the case of `WebCore.dll` it has to download it using the build script as its to large to upload to crates.io.
 
-**Currently only windows is supported.**
+> **Important**
+> Currently only windows is supported.
 
 # [Licence](https://ultralig.ht/#pricing)
