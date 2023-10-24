@@ -8,14 +8,11 @@ use crate::{
         ulDestroyScrollEvent, ulDestroyString, ulDestroyView, ulRender, ulStringGetData,
         ulStringGetLength, ulUpdate, ulViewFireKeyEvent, ulViewFireMouseEvent,
         ulViewFireScrollEvent, ulViewFocus, ulViewGetNeedsPaint, ulViewGetSurface, ulViewLoadURL,
-        ulViewLockJSContext, ulViewReload, ulViewResize, ulViewSetAddConsoleMessageCallback,
-        ulViewSetDOMReadyCallback, ulViewSetFinishLoadingCallback, ulViewUnfocus,
-        ulViewUnlockJSContext, JSContextGetGlobalObject, JSContextRef,
-        JSObjectMakeFunctionWithCallback, JSObjectRef, JSObjectSetProperty,
-        JSStringCreateWithUTF8CString, JSStringRelease, JSValueMakeString, JSValueRef,
-        ULFinishLoadingCallback, ULKeyEventType_kKeyEventType_Char,
-        ULKeyEventType_kKeyEventType_KeyDown, ULKeyEventType_kKeyEventType_KeyUp, ULMessageLevel,
-        ULMessageSource, ULMouseButton_kMouseButton_Left, ULMouseButton_kMouseButton_None,
+        ulViewReload, ulViewResize, ulViewSetAddConsoleMessageCallback, ulViewSetDOMReadyCallback,
+        ulViewSetFinishLoadingCallback, ulViewUnfocus, ULFinishLoadingCallback,
+        ULKeyEventType_kKeyEventType_Char, ULKeyEventType_kKeyEventType_KeyDown,
+        ULKeyEventType_kKeyEventType_KeyUp, ULMessageLevel, ULMessageSource,
+        ULMouseButton_kMouseButton_Left, ULMouseButton_kMouseButton_None,
         ULMouseEventType_kMouseEventType_MouseDown, ULMouseEventType_kMouseEventType_MouseMoved,
         ULMouseEventType_kMouseEventType_MouseUp, ULRenderer,
         ULScrollEventType_kScrollEventType_ScrollByPage,
@@ -326,35 +323,6 @@ impl View {
     pub fn lock_jscontext(&self) -> JSContext<'_> {
         JSContext::new(&self)
     }
-
-    pub fn lock_jsc(&self) {
-        unsafe {
-            let context = ulViewLockJSContext(self.inner);
-            let global_object = JSContextGetGlobalObject(context);
-
-            let name = CString::new("GetMessage").unwrap();
-            let name = JSStringCreateWithUTF8CString(name.as_ptr());
-            let func = JSObjectMakeFunctionWithCallback(context, name, Some(get_message));
-            JSObjectSetProperty(context, global_object, name, func, 0, null_mut());
-
-            JSStringRelease(name);
-            ulViewUnlockJSContext(self.inner)
-        };
-    }
-}
-
-extern "C" fn get_message(
-    ctx: JSContextRef,
-    _function: JSObjectRef,
-    _this_object: JSObjectRef,
-    _argument_count: usize,
-    _arguments: *const JSValueRef,
-    _exception: *mut JSValueRef,
-) -> JSValueRef {
-    let string = CString::new("Hello from Rust<br/>Ultralight rocks!").unwrap();
-    let string = unsafe { JSStringCreateWithUTF8CString(string.as_ptr()) };
-
-    unsafe { JSValueMakeString(ctx, string) }
 }
 
 impl Drop for View {

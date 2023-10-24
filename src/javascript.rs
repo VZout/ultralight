@@ -307,6 +307,12 @@ impl<'a> JSObject<'a> {
     }
 }
 
+impl From<&JSObject<'_>> for JSObjectRef {
+    fn from(value: &JSObject<'_>) -> Self {
+        value.inner
+    }
+}
+
 impl Drop for JSObject<'_> {
     fn drop(&mut self) {}
 }

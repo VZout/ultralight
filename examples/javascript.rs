@@ -1,4 +1,6 @@
-use ultralight::{Config, Renderer, View, ViewConfig};
+use std::{ffi::CString, ptr::null_mut};
+
+use ultralight::{sys::*, Config, Renderer, ViewConfig};
 
 /// Extremely simple example loading and rendering page.html
 /// Then writing it to disc as a PNG file.
@@ -12,7 +14,25 @@ pub fn main() {
     let mut view: ultralight::View = renderer.create_view(800, 800, &ViewConfig::default());
 
     view.load_url("file:///javascript.html".to_owned());
-    view.set_dom_ready_callback(Some(dom_ready));
+    view.set_dom_ready_callback(|view| {
+        unsafe {
+            let context = &view.lock_jscontext();
+            let global_object = &context.get_global_object();
+
+            let name = CString::new("GetMessage").unwrap();
+            let name = JSStringCreateWithUTF8CString(name.as_ptr());
+            let func = JSObjectMakeFunctionWithCallback(context.into(), name, Some(get_message));
+            JSObjectSetProperty(
+                context.into(),
+                global_object.into(),
+                name,
+                func,
+                0,
+                null_mut(),
+            );
+            JSStringRelease(name);
+        };
+    });
 
     // Wait for page to be loaded.
     while !view.is_ready() {
@@ -32,13 +52,16 @@ pub fn main() {
     view.get_image().save("test.png").unwrap();
 }
 
-pub extern "C" fn dom_ready(
-    _user_data: *mut std::os::raw::c_void,
-    caller: ultralight::sys::ULView,
-    _frame_id: u64,
-    _is_main_frame: bool,
-    _url: ultralight::sys::ULString,
-) {
-    let view = View::from(&caller);
-    view.lock_jsc();
+extern "C" fn get_message(
+    ctx: JSContextRef,
+    _function: JSObjectRef,
+    _this_object: JSObjectRef,
+    _argument_count: usize,
+    _arguments: *const JSValueRef,
+    _exception: *mut JSValueRef,
+) -> JSValueRef {
+    let string = CString::new("Hello from Rust<br/>Ultralight rocks!").unwrap();
+    let string = unsafe { JSStringCreateWithUTF8CString(string.as_ptr()) };
+
+    unsafe { JSValueMakeString(ctx, string) }
 }
