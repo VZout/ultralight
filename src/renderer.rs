@@ -3,23 +3,30 @@ use crate::{
     sys::{
         ulBitmapGetBpp, ulBitmapGetHeight, ulBitmapGetWidth, ulBitmapRawPixels,
         ulBitmapSurfaceGetBitmap, ulBitmapSwapRedBlueChannels, ulCreateKeyEvent,
-        ulCreateMouseEvent, ulCreateRenderer, ulCreateSession, ulCreateString, ulCreateView,
-        ulDestroyKeyEvent, ulDestroyMouseEvent, ulDestroyRenderer, ulDestroyString, ulDestroyView,
-        ulRender, ulStringGetData, ulStringGetLength, ulUpdate, ulViewFireKeyEvent,
-        ulViewFireMouseEvent, ulViewFocus, ulViewGetNeedsPaint, ulViewGetSurface, ulViewLoadURL,
-        ulViewLockJSContext, ulViewResize, ulViewSetAddConsoleMessageCallback,
+        ulCreateMouseEvent, ulCreateRenderer, ulCreateScrollEvent, ulCreateSession, ulCreateString,
+        ulCreateView, ulDestroyKeyEvent, ulDestroyMouseEvent, ulDestroyRenderer,
+        ulDestroyScrollEvent, ulDestroyString, ulDestroyView, ulRender, ulStringGetData,
+        ulStringGetLength, ulUpdate, ulViewFireKeyEvent, ulViewFireMouseEvent,
+        ulViewFireScrollEvent, ulViewFocus, ulViewGetNeedsPaint, ulViewGetSurface, ulViewLoadURL,
+        ulViewLockJSContext, ulViewReload, ulViewResize, ulViewSetAddConsoleMessageCallback,
         ulViewSetDOMReadyCallback, ulViewSetFinishLoadingCallback, ulViewUnfocus,
         ulViewUnlockJSContext, JSContextGetGlobalObject, JSContextRef,
         JSObjectMakeFunctionWithCallback, JSObjectRef, JSObjectSetProperty,
         JSStringCreateWithUTF8CString, JSStringRelease, JSValueMakeString, JSValueRef,
-        ULDOMReadyCallback, ULFinishLoadingCallback, ULKeyEventType_kKeyEventType_Char,
+        ULFinishLoadingCallback, ULKeyEventType_kKeyEventType_Char,
         ULKeyEventType_kKeyEventType_KeyDown, ULKeyEventType_kKeyEventType_KeyUp, ULMessageLevel,
         ULMessageSource, ULMouseButton_kMouseButton_Left, ULMouseButton_kMouseButton_None,
         ULMouseEventType_kMouseEventType_MouseDown, ULMouseEventType_kMouseEventType_MouseMoved,
-        ULMouseEventType_kMouseEventType_MouseUp, ULRenderer, ULSession, ULString, ULView,
+        ULMouseEventType_kMouseEventType_MouseUp, ULRenderer,
+        ULScrollEventType_kScrollEventType_ScrollByPage,
+        ULScrollEventType_kScrollEventType_ScrollByPixel, ULSession, ULString, ULView,
     },
     JSContext,
 };
+
+#[cfg(feature = "filewatching")]
+use crate::ASSETS_MODIFIED;
+
 use image::RgbaImage;
 use std::{ffi::CString, os::raw::c_void, ptr::null_mut};
 
@@ -83,6 +90,8 @@ pub struct View {
     owned: bool,
     inner: ULView,
     is_ready: Box<bool>,
+
+    dom_ready_callback: Option<*mut c_void>, // Raw pointer passed to ultralight.
 }
 
 pub extern "C" fn console_callback_wrapper(
@@ -131,10 +140,19 @@ impl View {
     }
 
     /// Set callback for when the page finishes loading a URL into a frame.
-    pub fn set_dom_ready_callback(&mut self, callback: ULDOMReadyCallback) {
+    pub fn set_dom_ready_callback<F>(&mut self, callback: F)
+    where
+        F: FnMut(View),
+        F: 'static,
+    {
+        let dom_ready_callback: Box<Box<dyn FnMut(View)>> = Box::new(Box::new(callback));
+
+        let func_pointer = Box::into_raw(dom_ready_callback) as *mut c_void;
         unsafe {
-            ulViewSetDOMReadyCallback(self.inner, callback, null_mut());
+            ulViewSetDOMReadyCallback(self.inner, Some(dom_ready_wrapper), func_pointer);
         }
+
+        self.dom_ready_callback = Some(func_pointer);
     }
 
     pub fn key_event(
@@ -166,7 +184,7 @@ impl View {
         }
     }
 
-    pub fn text_event(&mut self, text: String) {
+    pub fn text_event(&self, text: String) {
         unsafe {
             let text = CString::new(text).unwrap();
             let text = ulCreateString(text.as_ptr());
@@ -189,7 +207,23 @@ impl View {
         }
     }
 
-    pub fn mouse_pressed(&mut self, x: i32, y: i32, pressed: bool) {
+    pub fn mouse_scroll(&self, x: i32, y: i32, line_scroll: bool) {
+        unsafe {
+            let event = ulCreateScrollEvent(
+                if line_scroll {
+                    ULScrollEventType_kScrollEventType_ScrollByPage
+                } else {
+                    ULScrollEventType_kScrollEventType_ScrollByPixel
+                },
+                x,
+                y,
+            );
+            ulViewFireScrollEvent(self.inner, event);
+            ulDestroyScrollEvent(event);
+        }
+    }
+
+    pub fn mouse_pressed(&self, x: i32, y: i32, pressed: bool) {
         unsafe {
             let event = ulCreateMouseEvent(
                 if pressed {
@@ -206,7 +240,7 @@ impl View {
         }
     }
 
-    pub fn mouse_moved(&mut self, x: i32, y: i32) {
+    pub fn mouse_moved(&self, x: i32, y: i32) {
         unsafe {
             let event = ulCreateMouseEvent(
                 ULMouseEventType_kMouseEventType_MouseMoved,
@@ -219,11 +253,11 @@ impl View {
         }
     }
 
-    pub fn resize(&mut self, width: u32, height: u32) {
+    pub fn resize(&self, width: u32, height: u32) {
         unsafe { ulViewResize(self.inner, width, height) };
     }
 
-    pub fn set_focus(&mut self, bool: bool) {
+    pub fn set_focus(&self, bool: bool) {
         if bool {
             unsafe { ulViewFocus(self.inner) };
         } else {
@@ -231,8 +265,14 @@ impl View {
         }
     }
 
+    pub fn reload(&self) {
+        unsafe {
+            ulViewReload(self.inner);
+        }
+    }
+
     /// Load a URL into main frame.
-    pub fn load_url(&mut self, string: String) {
+    pub fn load_url(&self, string: String) {
         unsafe {
             let url_string = CString::new(string).unwrap();
             let url_string = ulCreateString(url_string.as_ptr());
@@ -311,12 +351,8 @@ extern "C" fn get_message(
     _arguments: *const JSValueRef,
     _exception: *mut JSValueRef,
 ) -> JSValueRef {
-    println!("callback");
-
     let string = CString::new("Hello from Rust<br/>Ultralight rocks!").unwrap();
     let string = unsafe { JSStringCreateWithUTF8CString(string.as_ptr()) };
-
-    println!("hey");
 
     unsafe { JSValueMakeString(ctx, string) }
 }
@@ -324,6 +360,10 @@ extern "C" fn get_message(
 impl Drop for View {
     fn drop(&mut self) {
         if self.owned {
+            if let Some(ptr) = self.dom_ready_callback.take() {
+                let _: Box<Box<dyn FnMut(View)>> = unsafe { Box::from_raw(ptr as *mut _) };
+            }
+
             unsafe {
                 ulViewSetFinishLoadingCallback(self.inner, None, null_mut());
                 ulDestroyView(self.inner);
@@ -338,22 +378,26 @@ impl From<&View> for ULView {
     }
 }
 
+// TODO: this is akward with the owned value
 impl From<ULView> for View {
     fn from(value: ULView) -> Self {
         Self {
             inner: value,
             is_ready: Box::new(false),
             owned: true,
+            dom_ready_callback: None,
         }
     }
 }
 
+// TODO: this is akward with the owned value
 impl From<&ULView> for View {
     fn from(value: &ULView) -> Self {
         Self {
             inner: value.clone(),
             is_ready: Box::new(false),
             owned: false,
+            dom_ready_callback: None,
         }
     }
 }
@@ -365,8 +409,29 @@ pub extern "C" fn on_finish_loading(
     is_main_frame: bool,
     _url: ULString,
 ) {
+    #[cfg(feature = "filewatching")]
+    unsafe {
+        *ASSETS_MODIFIED.write().unwrap() = false;
+    }
+
     if is_main_frame {
         let is_ready: *mut bool = user_data as _;
         unsafe { *is_ready = true };
+    }
+}
+
+/// Wraps rust callbacks for `JSObject`
+unsafe extern "C" fn dom_ready_wrapper(
+    user_data: *mut std::os::raw::c_void,
+    caller: ULView,
+    _frame_id: u64,
+    _is_main_frame: bool,
+    _url: ULString,
+) {
+    let view = View::from(&caller);
+
+    unsafe {
+        let closure: &mut Box<dyn FnMut(View)> = std::mem::transmute(user_data);
+        closure(view);
     }
 }
