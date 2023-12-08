@@ -41,6 +41,16 @@ impl IntoJSValue for &str {
     }
 }
 
+impl IntoJSValue for f64 {
+    fn into_value(self, ctx: &JSContext<'_>) -> JSValueRef {
+        unsafe { JSValueMakeNumber(ctx.inner, self) }
+    }
+
+    fn from_value(ctx: &JSContext<'_>, value: JSValueRef) -> Self {
+        unsafe { JSValueToNumber(ctx.inner, value, null_mut()) }
+    }
+}
+
 impl IntoJSValue for f32 {
     fn into_value(self, ctx: &JSContext<'_>) -> JSValueRef {
         unsafe { JSValueMakeNumber(ctx.inner, self as f64) }
