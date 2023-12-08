@@ -9,10 +9,10 @@ use crate::{
         ulStringGetLength, ulUpdate, ulViewFireKeyEvent, ulViewFireMouseEvent,
         ulViewFireScrollEvent, ulViewFocus, ulViewGetNeedsPaint, ulViewGetSurface, ulViewLoadURL,
         ulViewReload, ulViewResize, ulViewSetAddConsoleMessageCallback, ulViewSetDOMReadyCallback,
-        ulViewSetFinishLoadingCallback, ulViewUnfocus, ULFinishLoadingCallback,
-        ULKeyEventType_kKeyEventType_Char, ULKeyEventType_kKeyEventType_KeyDown,
-        ULKeyEventType_kKeyEventType_KeyUp, ULMessageLevel, ULMessageSource,
-        ULMouseButton_kMouseButton_Left, ULMouseButton_kMouseButton_None,
+        ulViewSetFinishLoadingCallback, ulViewSetNeedsPaint, ulViewUnfocus,
+        ULFinishLoadingCallback, ULKeyEventType_kKeyEventType_Char,
+        ULKeyEventType_kKeyEventType_KeyDown, ULKeyEventType_kKeyEventType_KeyUp, ULMessageLevel,
+        ULMessageSource, ULMouseButton_kMouseButton_Left, ULMouseButton_kMouseButton_None,
         ULMouseEventType_kMouseEventType_MouseDown, ULMouseEventType_kMouseEventType_MouseMoved,
         ULMouseEventType_kMouseEventType_MouseUp, ULRenderer,
         ULScrollEventType_kScrollEventType_ScrollByPage,
@@ -262,6 +262,10 @@ impl View {
         }
     }
 
+    pub fn set_needs_repaint(&self, val: bool) {
+        unsafe { ulViewSetNeedsPaint(self.inner, val) };
+    }
+
     pub fn reload(&self) {
         unsafe {
             ulViewReload(self.inner);
@@ -305,6 +309,14 @@ impl View {
 
     pub fn needs_repaint(&self) -> bool {
         unsafe { ulViewGetNeedsPaint(self.inner) }
+    }
+
+    pub fn bitmap_size(&self) -> (u32, u32) {
+        unsafe {
+            let surface = ulViewGetSurface(self.inner);
+            let bitmap: *mut crate::sys::C_Bitmap = ulBitmapSurfaceGetBitmap(surface);
+            (ulBitmapGetWidth(bitmap), ulBitmapGetHeight(bitmap))
+        }
     }
 
     pub fn get_image_raw(&self) -> &[u8] {
