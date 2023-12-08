@@ -179,7 +179,7 @@ impl<'a> JSContext<'a> {
         }
     }
 
-    pub fn get_global_object(&self) -> JSObject {
+    pub fn get_global_object(&self) -> JSObject<'_> {
         let global_object = unsafe { JSContextGetGlobalObject(self.inner) };
         JSObject::from_object(self, global_object)
     }
@@ -197,7 +197,7 @@ impl<'a> JSContext<'a> {
         }
     }
 
-    pub fn call_function(&self, func: JSObjectRef, arguments: Vec<JSObject>) -> JSValueRef {
+    pub fn call_function(&self, func: JSObjectRef, arguments: Vec<JSObject<'_>>) -> JSValueRef {
         let arguments: Vec<_> = arguments.iter().map(|o| o.inner).collect();
 
         unsafe {
@@ -233,7 +233,7 @@ impl From<JSContextRef> for JSContext<'_> {
 }
 
 impl From<&JSContext<'_>> for JSContextRef {
-    fn from(value: &JSContext) -> Self {
+    fn from(value: &JSContext<'_>) -> Self {
         value.inner
     }
 }
