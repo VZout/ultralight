@@ -1,15 +1,16 @@
-use std::{ffi::CString, os::raw::c_void, ptr::null_mut};
-
 use crate::{
     sys::{
         ulViewLockJSContext, ulViewUnlockJSContext, JSContextGetGlobalObject, JSContextRef,
-        JSEvaluateScript, JSObjectCallAsFunction, JSObjectGetProperty, JSObjectMake,
-        JSObjectMakeArray, JSObjectMakeFunctionWithCallback, JSObjectRef, JSObjectSetProperty,
-        JSStringCreateWithUTF8CString, JSStringRelease, JSValueMakeNumber, JSValueMakeString,
-        JSValueRef, JSValueToNumber, JSValueToObject,
+        JSEvaluateScript, JSObjectCallAsFunction, JSObjectGetProperty, JSObjectGetPropertyAtIndex,
+        JSObjectMake, JSObjectMakeArray, JSObjectMakeFunctionWithCallback,
+        JSObjectMakeTypedArrayWithArrayBuffer, JSObjectRef, JSObjectSetProperty,
+        JSStringCreateWithUTF8CString, JSStringRelease,
+        JSTypedArrayType_kJSTypedArrayTypeFloat32Array, JSValueIsArray, JSValueMakeNumber,
+        JSValueMakeString, JSValueRef, JSValueToNumber, JSValueToObject,
     },
     View,
 };
+use std::{ffi::CString, os::raw::c_void, ptr::null_mut};
 
 pub type RustCallback = dyn FnMut(&JSContext<'_>, &[JSValueRef]);
 
@@ -105,6 +106,37 @@ impl IntoJSObject for &[&str] {
 
         JSObject::from_object(ctx, inner)
     }
+}
+
+pub fn test2<'a>(ctx: &'a JSContext<'a>, obj: JSValueRef) -> bool {
+    unsafe { JSValueIsArray(ctx.inner, obj) }
+}
+
+pub fn test<'a, const N: usize>(ctx: &'a JSContext<'a>, array: [f32; N]) -> JSObject<'a> {
+    let array = array
+        .into_iter()
+        .map(|v| v.into_obj(ctx).inner)
+        .collect::<Vec<_>>();
+
+    let array_buffer = unsafe {
+        JSObjectMakeArray(
+            ctx.inner,
+            array.len(),
+            array.as_ptr() as *const _,
+            null_mut(),
+        )
+    };
+
+    let inner = unsafe {
+        JSObjectMakeTypedArrayWithArrayBuffer(
+            ctx.inner,
+            JSTypedArrayType_kJSTypedArrayTypeFloat32Array,
+            array_buffer,
+            null_mut(),
+        )
+    };
+
+    JSObject::from_object(ctx, inner)
 }
 
 impl<T, const N: usize> IntoJSObject for [T; N]
@@ -280,6 +312,60 @@ impl<'a> JSObject<'a> {
                 null_mut(),
             );
             JSStringRelease(name);
+        }
+    }
+
+    pub fn get_property(&self, name: &str) -> JSValueRef {
+        unsafe {
+            let name = CString::new(name).unwrap();
+            let name = JSStringCreateWithUTF8CString(name.as_ptr());
+            let value = JSObjectGetProperty(self.ctx.into(), self.inner, name, null_mut());
+            JSStringRelease(name);
+            value
+        }
+    }
+
+    /// TODO: This is very hacky...
+    pub fn as_vec3(&self) -> [f32; 3] {
+        unsafe {
+            [
+                f32::from_value(
+                    self.ctx.into(),
+                    JSObjectGetPropertyAtIndex(self.ctx.into(), self.inner, 0, null_mut()),
+                ),
+                f32::from_value(
+                    self.ctx.into(),
+                    JSObjectGetPropertyAtIndex(self.ctx.into(), self.inner, 1, null_mut()),
+                ),
+                f32::from_value(
+                    self.ctx.into(),
+                    JSObjectGetPropertyAtIndex(self.ctx.into(), self.inner, 2, null_mut()),
+                ),
+            ]
+        }
+    }
+
+    /// TODO: This is very hacky...
+    pub fn as_vec4(&self) -> [f32; 4] {
+        unsafe {
+            [
+                f32::from_value(
+                    self.ctx.into(),
+                    JSObjectGetPropertyAtIndex(self.ctx.into(), self.inner, 0, null_mut()),
+                ),
+                f32::from_value(
+                    self.ctx.into(),
+                    JSObjectGetPropertyAtIndex(self.ctx.into(), self.inner, 1, null_mut()),
+                ),
+                f32::from_value(
+                    self.ctx.into(),
+                    JSObjectGetPropertyAtIndex(self.ctx.into(), self.inner, 2, null_mut()),
+                ),
+                f32::from_value(
+                    self.ctx.into(),
+                    JSObjectGetPropertyAtIndex(self.ctx.into(), self.inner, 3, null_mut()),
+                ),
+            ]
         }
     }
 
