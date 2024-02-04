@@ -6,7 +6,7 @@ pub mod sys;
 pub use javascript::*;
 pub use platform::*;
 pub use renderer::*;
-use sys::{ulConfigSetAnimationTimerDelay, ulViewConfigSetIsTransparent};
+use sys::{ulConfigSetAnimationTimerDelay, ulConfigSetCachePath, ulViewConfigSetIsTransparent};
 
 use crate::sys::{
     ulConfigSetResourcePathPrefix, ulCreateConfig, ulCreateString, ulCreateViewConfig,
@@ -26,6 +26,15 @@ impl Config {
             let path = ulCreateString(path.as_ptr());
             ulConfigSetResourcePathPrefix(self.inner, path);
             ulConfigSetAnimationTimerDelay(self.inner, 0.0);
+            ulDestroyString(path);
+        }
+    }
+
+    pub fn set_cache_path(&mut self, path: String) {
+        let path = CString::new(path).unwrap();
+        unsafe {
+            let path = ulCreateString(path.as_ptr());
+            ulConfigSetCachePath(self.inner, path);
             ulDestroyString(path);
         }
     }
