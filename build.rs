@@ -26,7 +26,7 @@ fn main() {
             let webcore_out: String = format!("{}\\WebCore.dll", target.to_str().unwrap());
             if !std::path::Path::new(&webcore_out).exists() {
                 let mut response = ureq::get(
-                    "https://github.com/VZout/ultralight/releases/download/v0.1.3/WebCore.dll",
+                    "https://github.com/VZout/ultralight/releases/download/v0.1.5/WebCore.dll",
                 )
                 .call()
                 .unwrap()

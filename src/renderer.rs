@@ -5,8 +5,8 @@ use crate::{
         ulBitmapSurfaceGetBitmap, ulBitmapSwapRedBlueChannels, ulCreateKeyEvent,
         ulCreateMouseEvent, ulCreateRenderer, ulCreateScrollEvent, ulCreateSession, ulCreateString,
         ulCreateView, ulDestroyKeyEvent, ulDestroyMouseEvent, ulDestroyRenderer,
-        ulDestroyScrollEvent, ulDestroyString, ulDestroyView, ulRender, ulStringGetData,
-        ulStringGetLength, ulUpdate, ulViewFireKeyEvent, ulViewFireMouseEvent,
+        ulDestroyScrollEvent, ulDestroyString, ulDestroyView, ulRefreshDisplay, ulRender,
+        ulStringGetData, ulStringGetLength, ulUpdate, ulViewFireKeyEvent, ulViewFireMouseEvent,
         ulViewFireScrollEvent, ulViewFocus, ulViewGetNeedsPaint, ulViewGetSurface, ulViewLoadURL,
         ulViewReload, ulViewResize, ulViewSetAddConsoleMessageCallback, ulViewSetDOMReadyCallback,
         ulViewSetFinishLoadingCallback, ulViewSetNeedsPaint, ulViewUnfocus,
@@ -64,6 +64,7 @@ impl Renderer {
     /// Update timers and dispatch internal callbacks (JavaScript and network).
     pub fn update(&mut self) {
         unsafe {
+            ulRefreshDisplay(self.inner, 0); // TODO: Move to after vsync
             ulUpdate(self.inner);
         }
     }
