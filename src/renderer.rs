@@ -6,9 +6,10 @@ use crate::{
         ulCreateMouseEvent, ulCreateRenderer, ulCreateScrollEvent, ulCreateSession, ulCreateString,
         ulCreateView, ulDestroyKeyEvent, ulDestroyMouseEvent, ulDestroyRenderer,
         ulDestroyScrollEvent, ulDestroyString, ulDestroyView, ulRefreshDisplay, ulRender,
-        ulStringGetData, ulStringGetLength, ulUpdate, ulViewFireKeyEvent, ulViewFireMouseEvent,
-        ulViewFireScrollEvent, ulViewFocus, ulViewGetNeedsPaint, ulViewGetSurface, ulViewLoadURL,
-        ulViewReload, ulViewResize, ulViewSetAddConsoleMessageCallback, ulViewSetDOMReadyCallback,
+        ulStringGetData, ulStringGetLength, ulSurfaceGetDirtyBounds, ulUpdate, ulViewFireKeyEvent,
+        ulViewFireMouseEvent, ulViewFireScrollEvent, ulViewFocus, ulViewGetNeedsPaint,
+        ulViewGetSurface, ulViewLoadURL, ulViewReload, ulViewResize,
+        ulViewSetAddConsoleMessageCallback, ulViewSetDOMReadyCallback,
         ulViewSetFinishLoadingCallback, ulViewSetNeedsPaint, ulViewUnfocus,
         ULFinishLoadingCallback, ULKeyEventType_kKeyEventType_Char,
         ULKeyEventType_kKeyEventType_KeyDown, ULKeyEventType_kKeyEventType_KeyUp, ULMessageLevel,
@@ -308,8 +309,23 @@ impl View {
         }
     }
 
-    pub fn needs_repaint(&self) -> bool {
-        unsafe { ulViewGetNeedsPaint(self.inner) }
+    /// Returns whether a view needs repainting and the area of the surface that is dirty.
+    /// array: (left, right, top, bottom)
+    pub fn needs_repaint(&self) -> Option<[u32; 4]> {
+        if unsafe { ulViewGetNeedsPaint(self.inner) } {
+            unsafe {
+                let surface = ulViewGetSurface(self.inner);
+                let rect = ulSurfaceGetDirtyBounds(surface);
+                Some([
+                    rect.left as u32,
+                    rect.right as u32,
+                    rect.top as u32,
+                    rect.bottom as u32,
+                ])
+            }
+        } else {
+            None
+        }
     }
 
     pub fn bitmap_size(&self) -> (u32, u32) {
