@@ -3,9 +3,8 @@ use notify::{Error, Event, RecommendedWatcher, RecursiveMode, Watcher};
 
 use crate::sys::{
     ulCreateBuffer, ulCreateString, ulDestroyString, ulEnablePlatformFileSystem,
-    ulEnablePlatformFontLoader, ulPlatformSetFileSystem, ulPlatformSetGPUDriver,
-    ulPlatformSetLogger, ulStringGetData, ulStringGetLength, C_String, ULBuffer, ULFileSystem,
-    ULLogLevel, ULLogger, ULString,
+    ulEnablePlatformFontLoader, ulPlatformSetFileSystem, ulPlatformSetLogger, ulStringGetData,
+    ulStringGetLength, C_String, ULBuffer, ULFileSystem, ULLogLevel, ULLogger, ULString,
 };
 use std::{
     ffi::CString,

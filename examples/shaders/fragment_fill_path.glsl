@@ -1,13 +1,10 @@
-[[vk::binding(0, 0)]] cbuffer Uniforms : register(b0)
+[[vk::binding(0)]] cbuffer Uniforms : register(b0)
 {
   float4 State;
   matrix Transform;
   float4 Scalar4[2];
   float4 Vector[8];
   uint ClipSize;
-  uint padding;
-  uint padding2;
-  uint padding3;
   matrix Clip[8];
 };
 
@@ -17,8 +14,8 @@ float ScreenHeight() { return State[2]; }
 float ScreenScale() { return State[3]; }
 float Scalar(int i) { if (i < 4) return Scalar4[0][i]; else return Scalar4[1][i - 4]; }
 
-Texture2D texture0 : register(t0);
-SamplerState sampler0 : register(s0);
+[[vk::binding(1)]] Texture2D texture0 : register(t0);
+[[vk::binding(2)]] SamplerState sampler0 : register(s0);
 
 struct VS_OUTPUT
 {

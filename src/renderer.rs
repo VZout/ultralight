@@ -8,14 +8,14 @@ use crate::{
         ulDestroyScrollEvent, ulDestroyString, ulDestroyView, ulRefreshDisplay, ulRender,
         ulStringGetData, ulStringGetLength, ulSurfaceGetDirtyBounds, ulUpdate, ulViewFireKeyEvent,
         ulViewFireMouseEvent, ulViewFireScrollEvent, ulViewFocus, ulViewGetNeedsPaint,
-        ulViewGetSurface, ulViewLoadURL, ulViewReload, ulViewResize,
+        ulViewGetRenderTarget, ulViewGetSurface, ulViewLoadURL, ulViewReload, ulViewResize,
         ulViewSetAddConsoleMessageCallback, ulViewSetDOMReadyCallback,
         ulViewSetFinishLoadingCallback, ulViewSetNeedsPaint, ulViewUnfocus,
         ULFinishLoadingCallback, ULKeyEventType_kKeyEventType_Char,
         ULKeyEventType_kKeyEventType_KeyDown, ULKeyEventType_kKeyEventType_KeyUp, ULMessageLevel,
         ULMessageSource, ULMouseButton_kMouseButton_Left, ULMouseButton_kMouseButton_None,
         ULMouseEventType_kMouseEventType_MouseDown, ULMouseEventType_kMouseEventType_MouseMoved,
-        ULMouseEventType_kMouseEventType_MouseUp, ULRenderer,
+        ULMouseEventType_kMouseEventType_MouseUp, ULRenderBuffer, ULRenderTarget, ULRenderer,
         ULScrollEventType_kScrollEventType_ScrollByPage,
         ULScrollEventType_kScrollEventType_ScrollByPixel, ULSession, ULString, ULView,
     },
@@ -136,6 +136,10 @@ impl View {
                 callback_ptr,
             );
         }
+    }
+
+    pub fn get_render_target(&self) -> ULRenderTarget {
+        unsafe { ulViewGetRenderTarget(self.inner) }
     }
 
     /// Set callback for when the page finishes loading a URL into a frame.

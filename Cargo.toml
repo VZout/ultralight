@@ -15,7 +15,7 @@ notify = { version = "6.1.1", optional = true }
 
 [dev-dependencies]
 image = { version = "0.24.0", default-features = false, features = [ "png" ] }
-wgpu = { version = "0.19.1", features = ["glsl", "spirv"] }
+wgpu = { version = "0.19.1", features = [ "spirv"] }
 env_logger = "0.10"
 pollster = "0.3"
 nohash = "*"

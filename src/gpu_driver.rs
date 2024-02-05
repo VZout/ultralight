@@ -1,4 +1,7 @@
-use std::sync::{Mutex, OnceLock};
+use std::{
+    any::Any,
+    sync::{Mutex, OnceLock},
+};
 
 use crate::sys::{
     ulPlatformSetGPUDriver, C_Bitmap, ULCommandList, ULGPUDriver, ULIndexBuffer, ULRenderBuffer,
@@ -23,7 +26,9 @@ unsafe extern "C" fn update_texture(id: u32, bitmap: *mut C_Bitmap) {
     driver.update_texture(id, bitmap);
 }
 unsafe extern "C" fn destroy_texture(id: u32) {
-    println!("destroy texture");
+    let mut driver = static_gpu_driver().lock().unwrap();
+    let driver = driver.as_mut().expect("Gpu driver enabled but not set?");
+    driver.destroy_texture(id);
 }
 unsafe extern "C" fn next_render_buffer_id() -> u32 {
     let mut driver = static_gpu_driver().lock().unwrap();
@@ -36,7 +41,9 @@ unsafe extern "C" fn create_render_buffer(id: u32, render_buffer: ULRenderBuffer
     driver.create_render_buffer(id, render_buffer);
 }
 unsafe extern "C" fn destroy_render_buffer(id: u32) {
-    println!("destroy render buffer");
+    let mut driver = static_gpu_driver().lock().unwrap();
+    let driver = driver.as_mut().expect("Gpu driver enabled but not set?");
+    driver.destroy_render_buffer(id);
 }
 unsafe extern "C" fn next_geometry_id() -> u32 {
     let mut driver = static_gpu_driver().lock().unwrap();
@@ -54,7 +61,9 @@ unsafe extern "C" fn update_geometry(id: u32, vb: ULVertexBuffer, ib: ULIndexBuf
     driver.update_geometry(id, vb, ib);
 }
 unsafe extern "C" fn destroy_geometry(id: u32) {
-    println!("destroy geometry");
+    let mut driver = static_gpu_driver().lock().unwrap();
+    let driver = driver.as_mut().expect("Gpu driver enabled but not set?");
+    driver.destroy_geometry(id);
 }
 unsafe extern "C" fn update_command_list(cmd_list: ULCommandList) {
     let mut driver = static_gpu_driver().lock().unwrap();
@@ -62,17 +71,22 @@ unsafe extern "C" fn update_command_list(cmd_list: ULCommandList) {
     driver.update_command_list(cmd_list);
 }
 
-pub trait GpuDriver: Send + Sync {
+pub trait GpuDriver: Send + Sync + Any {
+    fn as_any(&self) -> &dyn Any;
+
     fn next_texture_id(&mut self) -> u32;
     fn create_texture(&mut self, id: u32, bitmap: *mut C_Bitmap);
     fn update_texture(&mut self, id: u32, bitmap: *mut C_Bitmap);
+    fn destroy_texture(&mut self, id: u32);
 
     fn next_render_buffer_id(&mut self) -> u32;
     fn create_render_buffer(&mut self, id: u32, render_buffer: ULRenderBuffer);
+    fn destroy_render_buffer(&mut self, id: u32);
 
     fn next_geometry_id(&mut self) -> u32;
     fn create_geometry(&mut self, id: u32, vb: ULVertexBuffer, ib: ULIndexBuffer);
     fn update_geometry(&mut self, id: u32, vb: ULVertexBuffer, ib: ULIndexBuffer);
+    fn destroy_geometry(&mut self, id: u32);
 
     fn update_command_list(&mut self, cmd_list: ULCommandList);
 }
@@ -102,7 +116,7 @@ pub fn set_gpu_driver(driver: Box<dyn GpuDriver>) {
     }
 }
 
-fn static_gpu_driver() -> &'static Mutex<Option<Box<dyn GpuDriver>>> {
+pub fn static_gpu_driver() -> &'static Mutex<Option<Box<dyn GpuDriver>>> {
     static ARRAY: OnceLock<Mutex<Option<Box<dyn GpuDriver>>>> = OnceLock::new();
     ARRAY.get_or_init(|| Mutex::new(None))
 }

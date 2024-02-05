@@ -5,9 +5,6 @@
   float4 Scalar4[2];
   float4 Vector[8];
   uint ClipSize;
-  uint padding;
-  uint padding2;
-  uint padding3;
   matrix Clip[8];
 };
 

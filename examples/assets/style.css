@@ -1,0 +1,226 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap');
+
+*,
+*:before,
+*:after {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+:root {
+	--background: #00000044;
+	--glow-object: #a530ff;
+	--glow-object-grad: linear-gradient(to bottom right, #9d1fff, #bf1fff);
+	--glow-object-grad-text: linear-gradient(to bottom right, #d770ff, #bc85ff);
+	--glow-shadow: #7900ff;
+	--glow-shadow-text: #7900ffbb;
+	--text: #d5d1dd;
+}
+
+body {
+	width: 100%;
+	color: var(--text);
+	font-family: "Inter";
+	display: grid;
+	grid-template-columns: 4.5rem 1fr;
+	margin: 0;
+}
+
+.bg {
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background:
+		linear-gradient(#23004a55, #23004a99), url("https://media.idownloadblog.com/wp-content/uploads/2021/06/macOS-Monterey-wallpaper-Dark.jpg") center center / cover;
+}
+
+nav {
+	position: sticky;
+	top: 0;
+	height: 100vh;
+	place-self: stretch;
+	background: var(--background);
+	backdrop-filter: blur(2rem);
+	display: flex;
+	flex-direction: column;
+	padding: 0.5rem;
+	d-gap: 0.5rem;
+}
+
+nav>a {
+	position: relative;
+	display: grid;
+	place-content: center;
+	color: var(--text);
+	height: 3.5rem;
+	border-radius: 0.75rem;
+	font-size: 1.5rem;
+	text-decoration: none;
+}
+
+nav>a:after {
+	position: absolute;
+	content: "";
+	left: 0.125rem;
+	top: 50%;
+	transform: translateY(-50%);
+	height: 0rem;
+	width: 0.3125rem;
+	width: 0.25rem;
+	border-radius: 1rem;
+	background: var(--glow-object);
+	transition: height 200ms ease, box-shadow 200ms ease;
+}
+
+nav>a:hover {
+	background: #ffffff15
+}
+
+nav>a:hover:after {
+	height: 2.5rem;
+	box-shadow: var(--glow-shadow) 0 0 7px 1px;
+}
+
+nav>a.active:after {
+	height: 2.5rem;
+	box-shadow: var(--glow-shadow) 0 0 7px 1px;
+}
+
+nav>.navspacer {
+	flex-grow: 1;
+}
+
+
+.dashboard {
+	place-self: stretch;
+	display: grid;
+	place-content: center;
+	grid-auto-rows: 9rem;
+	grid-template-columns: repeat(auto-fit, 9rem);
+	grid-auto-flow: row;
+	grid-gap: 0.75rem;
+	padding: 0.5rem;
+}
+
+.card {
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	border-radius: 0.75rem;
+	background: var(--background);
+	backdrop-filter: blur(2rem);
+}
+
+.card>h2 {
+	margin: 0;
+	padding: 0.375rem 0.5rem;
+	font-size: 1.125rem;
+}
+
+.card>.bigstats {
+	padding-top: 1.75rem;
+	display: grid;
+	grid-auto-flow: row;
+	grid-template-columns: 1fr 1fr 1fr;
+	grid-row-gap: 2rem;
+	place-content: center;
+	padding-bottom: 0.5rem;
+}
+
+.card>.bigstats>.stat {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+
+.statnum {
+	background: var(--glow-object-grad-text);
+	font-size: 2rem;
+	font-weight: 600;
+	background-clip: text;
+	-webkit-background-clip: text;
+	color: transparent;
+	filter: drop-shadow(var(--glow-shadow-text) 0px 0px 5px);
+	line-height: 0.9;
+}
+
+.card>.bigstats>.stat>.stattext {
+	font-weight: 500;
+}
+
+.card>ul {
+	margin: 0;
+	padding: 0 0.5rem;
+}
+
+.card>ul>li {
+	list-style-type: none;
+	margin: 0;
+	padding: 0.5rem 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border-top: 1px solid #ffffff22;
+	font-weight: 500;
+}
+
+.progresscircle {
+	--progress: 33;
+	position: relative;
+	width: 4.5rem;
+	height: 4.5rem;
+	display: grid;
+	place-content: center;
+	font-weight: 600;
+	margin: -0.375rem -0.25rem;
+}
+
+.progresscircle>svg {
+	position: absolute;
+	inset: 0;
+	transform: rotate(-90deg);
+}
+
+.progresscircle>svg>circle {
+	fill: none;
+	stroke: var(--glow-object);
+	filter: drop-shadow(var(--glow-shadow) 0 0 5px);
+	stroke-width: 8px;
+	stroke-dasharray: 250;
+	stroke-dashoffset: calc(250 - 2.5 * var(--progress));
+}
+
+
+.card>table {
+	flex-grow: 1;
+	margin: 0 0.5rem;
+	border-spacing: 0;
+}
+
+.card>table th,
+.card>table td {
+	margin: 0;
+	text-align: center;
+	border-top: 1px solid #ffffff22;
+}
+
+
+.card.profile {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.card.profile>h2 {
+	font-weight: 600;
+	font-size: 1.5rem;
+}
+
+.card.profile>p {
+	margin: 0;
+	padding-left: 0.5rem;
+	font-weight: 500;
+	transform: translateY(-0.375rem)
+}
