@@ -15,6 +15,13 @@ notify = { version = "6.1.1", optional = true }
 
 [dev-dependencies]
 image = { version = "0.24.0", default-features = false, features = [ "png" ] }
+wgpu = { version = "0.19.1", features = ["glsl", "spirv"] }
+env_logger = "0.10"
+pollster = "0.3"
+nohash = "*"
+bytemuck = { version = "1.13.1", features = [ "derive" ] }
+hassle-rs = "0.11.0"
+winit = { version = "0.29" }
 
 [build-dependencies]
 bindgen = { version = "0.68.1", optional = true }

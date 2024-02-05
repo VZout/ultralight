@@ -1,3 +1,4 @@
+pub mod gpu_driver;
 pub mod javascript;
 pub mod platform;
 pub mod renderer;
@@ -76,6 +77,14 @@ impl Default for ViewConfig {
         }
 
         Self { inner }
+    }
+}
+
+impl ViewConfig {
+    pub fn set_gpu_accelerated(&mut self) {
+        unsafe {
+            ulViewConfigSetIsAccelerated(self.inner, true);
+        }
     }
 }
 

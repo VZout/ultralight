@@ -309,22 +309,22 @@ impl View {
         }
     }
 
-    /// Returns whether a view needs repainting and the area of the surface that is dirty.
-    /// array: (left, right, top, bottom)
-    pub fn needs_repaint(&self) -> Option<[u32; 4]> {
-        if unsafe { ulViewGetNeedsPaint(self.inner) } {
-            unsafe {
-                let surface = ulViewGetSurface(self.inner);
-                let rect = ulSurfaceGetDirtyBounds(surface);
-                Some([
-                    rect.left as u32,
-                    rect.right as u32,
-                    rect.top as u32,
-                    rect.bottom as u32,
-                ])
-            }
-        } else {
-            None
+    pub fn needs_repaint(&self) -> bool {
+        unsafe { ulViewGetNeedsPaint(self.inner) }
+    }
+
+    /// Returns what area of the surface was written to
+    /// (left, right, top, bottom)
+    pub fn dirty_bounds(&self) -> [u32; 4] {
+        unsafe {
+            let surface = ulViewGetSurface(self.inner);
+            let rect = ulSurfaceGetDirtyBounds(surface);
+            [
+                rect.left as u32,
+                rect.right as u32,
+                rect.top as u32,
+                rect.bottom as u32,
+            ]
         }
     }
 
