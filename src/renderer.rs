@@ -2,20 +2,20 @@ use super::{Config, ViewConfig};
 use crate::{
     sys::{
         ulBitmapGetBpp, ulBitmapGetHeight, ulBitmapGetWidth, ulBitmapRawPixels,
-        ulBitmapSurfaceGetBitmap, ulBitmapSwapRedBlueChannels, ulCreateKeyEvent,
-        ulCreateMouseEvent, ulCreateRenderer, ulCreateScrollEvent, ulCreateSession, ulCreateString,
-        ulCreateView, ulDestroyKeyEvent, ulDestroyMouseEvent, ulDestroyRenderer,
-        ulDestroyScrollEvent, ulDestroyString, ulDestroyView, ulRefreshDisplay, ulRender,
-        ulStringGetData, ulStringGetLength, ulSurfaceGetDirtyBounds, ulUpdate, ulViewFireKeyEvent,
-        ulViewFireMouseEvent, ulViewFireScrollEvent, ulViewFocus, ulViewGetNeedsPaint,
-        ulViewGetRenderTarget, ulViewGetSurface, ulViewLoadURL, ulViewReload, ulViewResize,
+        ulBitmapSurfaceGetBitmap, ulCreateKeyEvent, ulCreateMouseEvent, ulCreateRenderer,
+        ulCreateScrollEvent, ulCreateSession, ulCreateString, ulCreateView, ulDestroyKeyEvent,
+        ulDestroyMouseEvent, ulDestroyRenderer, ulDestroyScrollEvent, ulDestroyString,
+        ulDestroyView, ulRefreshDisplay, ulRender, ulStringGetData, ulStringGetLength,
+        ulSurfaceGetDirtyBounds, ulUpdate, ulViewFireKeyEvent, ulViewFireMouseEvent,
+        ulViewFireScrollEvent, ulViewFocus, ulViewGetNeedsPaint, ulViewGetRenderTarget,
+        ulViewGetSurface, ulViewIsLoading, ulViewLoadURL, ulViewReload, ulViewResize,
         ulViewSetAddConsoleMessageCallback, ulViewSetDOMReadyCallback,
         ulViewSetFinishLoadingCallback, ulViewSetNeedsPaint, ulViewUnfocus,
         ULFinishLoadingCallback, ULKeyEventType_kKeyEventType_Char,
         ULKeyEventType_kKeyEventType_KeyDown, ULKeyEventType_kKeyEventType_KeyUp, ULMessageLevel,
         ULMessageSource, ULMouseButton_kMouseButton_Left, ULMouseButton_kMouseButton_None,
         ULMouseEventType_kMouseEventType_MouseDown, ULMouseEventType_kMouseEventType_MouseMoved,
-        ULMouseEventType_kMouseEventType_MouseUp, ULRenderBuffer, ULRenderTarget, ULRenderer,
+        ULMouseEventType_kMouseEventType_MouseUp, ULRenderTarget, ULRenderer,
         ULScrollEventType_kScrollEventType_ScrollByPage,
         ULScrollEventType_kScrollEventType_ScrollByPixel, ULSession, ULString, ULView,
     },
@@ -24,7 +24,7 @@ use crate::{
 
 #[cfg(feature = "filewatching")]
 use crate::ASSETS_MODIFIED;
-
+#[cfg(feature = "image")]
 use image::RgbaImage;
 use std::{ffi::CString, os::raw::c_void, ptr::null_mut};
 
@@ -290,10 +290,12 @@ impl View {
 
     /// Returns whether the main frame is loaded.
     pub fn is_ready(&self) -> bool {
-        *self.is_ready
+        let loading = unsafe { ulViewIsLoading(self.inner) };
+        *self.is_ready && !loading
     }
 
     /// Get the surface of the `View` as a `RgbaImage`.
+    #[cfg(feature = "image")]
     pub fn get_image(&self) -> RgbaImage {
         unsafe {
             let surface = ulViewGetSurface(self.inner);
@@ -301,7 +303,7 @@ impl View {
 
             let width = ulBitmapGetWidth(bitmap);
             let height = ulBitmapGetHeight(bitmap);
-            ulBitmapSwapRedBlueChannels(bitmap);
+            crate::sys::ulBitmapSwapRedBlueChannels(bitmap);
             let pixels_ptr = ulBitmapRawPixels(bitmap);
             let bytes_per_pixel = ulBitmapGetBpp(bitmap);
             let pixels: &[u8] = std::slice::from_raw_parts(
