@@ -72,6 +72,16 @@ impl IntoJSValue for u32 {
     }
 }
 
+impl IntoJSValue for u64 {
+    fn into_value(self, ctx: &JSContext<'_>) -> JSValueRef {
+        unsafe { JSValueMakeNumber(ctx.inner, self as f64) }
+    }
+
+    fn from_value(ctx: &JSContext<'_>, value: JSValueRef) -> Self {
+        unsafe { JSValueToNumber(ctx.inner, value, null_mut()) as Self }
+    }
+}
+
 impl IntoJSValue for String {
     fn into_value(self, ctx: &JSContext<'_>) -> JSValueRef {
         let string = CString::new(self).unwrap();

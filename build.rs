@@ -1,5 +1,7 @@
 // TODO: Can potentially remove `AppCore` linking.
 
+use std::io::Write;
+
 fn main() {
     #[cfg(feature = "requires_dll")]
     {
@@ -23,17 +25,12 @@ fn main() {
         // WebCore.dll is to large to upload to crates.io
         let webcore_out: String = format!("{}\\WebCore.dll", target.to_str().unwrap());
         if !std::path::Path::new(&webcore_out).exists() {
-            let mut response = ureq::get(
-                "https://github.com/VZout/ultralight/releases/download/v0.1.5/WebCore.dll",
-            )
-            .call()
-            .unwrap()
-            .into_reader();
-
-            //use flate2::read::GzDecoder;
-            //let mut tar = GzDecoder::new(response);
-            let mut file = std::fs::File::create(webcore_out).unwrap();
-            std::io::copy(&mut response, &mut file).unwrap();
+            unsafe {
+                download_dll(
+                    "https://github.com/VZout/ultralight/releases/download/v0.1.5/WebCore.dll",
+                    &webcore_out,
+                )
+            };
         }
 
         // Copy dll's to executable directory
@@ -79,4 +76,22 @@ fn main() {
             .write_to_file(out_path)
             .expect("Couldn't write bindings!");
     }
+}
+
+#[cfg(feature = "requires_dll")]
+pub unsafe fn download_dll(url: &str, out_path: &str) {
+    use windows::core::{HSTRING, PCWSTR};
+    use windows::Win32::System::Com::Urlmon::URLDownloadToFileW;
+
+    let url = HSTRING::from(url);
+    let out_path = HSTRING::from(out_path);
+
+    URLDownloadToFileW(
+        None,
+        PCWSTR::from_raw(url.as_ptr()),
+        PCWSTR::from_raw(out_path.as_ptr()),
+        0,
+        None,
+    )
+    .unwrap();
 }

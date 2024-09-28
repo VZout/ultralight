@@ -26,10 +26,18 @@ winit = { version = "0.29" }
 [build-dependencies]
 bindgen = { version = "0.68.1", optional = true }
 fs_extra = { version = "1.3.0", optional = true }
-ureq = { version = "2.9.1", optional = true, default-features = false, features=["tls"] }
+
+[build-dependencies.windows]
+version = "0.57.0"
+optional = true
+default-features = false
+features = [
+    "Win32_System_Com_Urlmon",
+]
 
 [features]
+default = []
 filewatching = [ "dep:notify" ]
 generate_bindings = [ "dep:bindgen" ]
 image = [ "dep:image" ]
-requires_dll = [ "dep:fs_extra", "dep:ureq" ]
+requires_dll = [ "dep:fs_extra", "dep:windows" ]
